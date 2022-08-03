@@ -21,5 +21,6 @@ func (app *application) routes() http.Handler {
 	// mux.Use(middleware.Heartbeat("/ping"))
 
 	mux.Get("/virtual-terminal", app.virtualHandler)
+	mux.Post("/payment-succeeded", app.paymentSucceeded)
 	return mux
 }
