@@ -5,7 +5,12 @@ import "net/http"
 func (app *application) virtualHandler(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Println("Hit the handler")
 
-	if err := app.renderTemplate(w, r, "terminal", nil); err != nil {
+	stringMap := make(map[string]string)
+
+	stringMap["publishable_key"] = app.Config.stripe.key
+	if err := app.renderTemplate(w, r, "terminal", &templateData{
+		StringMap: stringMap,
+	}); err != nil {
 		app.errorLog.Println(err)
 	}
 
@@ -35,6 +40,13 @@ func (app *application) paymentSucceeded(w http.ResponseWriter, r *http.Request)
 	data["pm"] = paymentMethod
 
 	if err := app.renderTemplate(w, r, "succeeded", &templateData{Data: data}); err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+}
+
+func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "buy-once", nil); err != nil {
 		app.errorLog.Println(err)
 		return
 	}

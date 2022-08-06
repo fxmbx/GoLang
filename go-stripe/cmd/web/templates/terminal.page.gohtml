@@ -26,7 +26,7 @@
 
 <div class="mb-3"> 
     <label for="cardholder-email" class="form-label">CardHolder Email</label>
-    <input type="email" class="form-control" id="cardholder-email" name="cardholder_email" required="" autocomplete="cardholder-email-new">
+    <input type="email" class="form-control" id="cardholder-email" name="email" required="" autocomplete="cardholder-email-new">
 </div>
 
 
@@ -55,7 +55,7 @@
 {{end}}
 
 
-{{define "js"}}
+{{define "js"}} 
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
@@ -65,7 +65,9 @@
     const payBtn = document.getElementById("pay-button")
     const processing = document.getElementById("processing-payment")
 
-    stripe = Stripe("pk_test_51LC4TMKxxGMLmzvfxaOPan6KPQK8HdRlFeX66lzpvYOwcP2gHWPJiJCoF05ybyaehdf472vyNwh0jA4DD0OnKwMt001DmmGgce")
+    {{/* stripe = Stripe("pk_test_51LC4TMKxxGMLmzvfxaOPan6KPQK8HdRlFeX66lzpvYOwcP2gHWPJiJCoF05ybyaehdf472vyNwh0jA4DD0OnKwMt001DmmGgce") */}}
+
+    stripe = Stripe({{.API}})
 
     function showPayButtons(){
         payBtn.classList.remove('d-none')
@@ -73,16 +75,16 @@
     }
 
     function showCardError(message){
+        cardMessagaes.classList.add("alert-danger")
         cardMessagaes.classList.remove("alert-success")
         cardMessagaes.classList.remove("d-none")
-        cardMessagaes.classList.add("alert-danger")
         cardMessagaes.innerText = message
     }
     function showCardSuccess(){
         cardMessagaes.classList.add("alert-success")
         cardMessagaes.classList.remove("d-none")
         cardMessagaes.classList.remove("alert-danger")
-        cardMessagaes.innerText = "Transaction Successful" 
+        cardMessagaes.innerText = "Transaction Successful"  
     }
 
     function hidePayBtn() {
@@ -100,7 +102,7 @@
         form.classList.add('was-validated')
         hidePayBtn()
 
-        let amountToCharge = String(parseFloat(document.getElementById("amount").value * 100))
+        let amountToCharge = String(parseFloat(document.getElementById("amount").value * 100)) 
         {{/* console.log(amountToCharge) */}}
         const payload ={
             amount: amountToCharge,
@@ -116,7 +118,8 @@
             body: JSON.stringify(payload)
         }
 
-        fetch("http://localhost:4001/api/payment-intent", options).then(response=>response.text())
+        {{/* fetch("http://localhost:4001/api/payment-intent", options).then(response=>response.text()) */}}
+        fetch("{{indent .StringMap "publishable_key"}}", options).then(response=>response.text())
             .then(response => {
                 let data;
                 try{
@@ -145,6 +148,8 @@
                                 processing.classList.add('d-none')
 
                                 showCardSuccess()
+
+                                document.getElementById("charge_form").submit()
                             }
                         }
                      })

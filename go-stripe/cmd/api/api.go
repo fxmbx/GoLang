@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go-stripe/internal/driver"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +35,7 @@ func main() {
 	var cfg Config
 	flag.IntVar(&cfg.port, "port", 4001, "server port to listen")
 	flag.StringVar(&cfg.env, "environment", "development", "Application Environment {development || production || maintainancce}")
+	flag.StringVar(&cfg.db.dsn, "dsn", "funbi:beedayme@tcp(localhost:3306)/widget?parseTime=true&tls=false", "DSN")
 
 	flag.Parse()
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
@@ -42,6 +44,14 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	conn, err := driver.OpenDb(cfg.db.dsn)
+	if err != nil {
+		log.Println("Cannot connect to mysql 😞")
+		errorLog.Fatal(err)
+		return
+	}
+
+	defer conn.Close()
 	app := &application{
 		Config:   cfg,
 		infoLog:  infoLog,
@@ -49,7 +59,7 @@ func main() {
 		version:  version,
 	}
 
-	err := app.Serve()
+	err = app.Serve()
 	if err != nil {
 		log.Fatal(err)
 	}

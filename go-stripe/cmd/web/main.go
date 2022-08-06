@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go-stripe/internal/driver"
 	"html/template"
 	"log"
 	"net/http"
@@ -44,6 +45,10 @@ func main() {
 	flag.StringVar(&cfg.env, "environment", "development", "Application Environment {development || production}")
 	flag.StringVar(&cfg.api, "Api", "http://localhost:4001", "Api Url")
 
+	flag.StringVar(&cfg.db.dsn, "dsn", "funbi:beedayme@tcp(localhost:3306)/widget?parseTime=true&tls=false", "DSN")
+
+	// flag.StringVar(&cfg.db.dsn, "dsn", "funbi:beedayme@tcp(localhost:3306)/widget?parseTime=true&tls=false", "DSN")
+
 	flag.Parse()
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
@@ -51,6 +56,13 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	conn, err := driver.OpenDb(cfg.db.dsn)
+	if err != nil {
+		log.Println("Cannot connect to mysql 😞")
+		errorLog.Fatal(err)
+		return
+	}
+	defer conn.Close()
 	tc := make(map[string]*template.Template)
 
 	app := &application{
@@ -61,7 +73,7 @@ func main() {
 		version:       version,
 	}
 
-	err := app.Serve()
+	err = app.Serve()
 	if err != nil {
 		app.errorLog.Panicln(err)
 		// log.Println(err)

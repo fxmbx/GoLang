@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"go-stripe/internal/cards"
 	"net/http"
 	"strconv"
@@ -20,11 +21,11 @@ type stripePayload struct {
 
 func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request) {
 	var payload stripePayload
-	// err := json.NewDecoder(r.Body).Decode(&payload)
-	err := app.readJSON(w, r, &payload)
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	// err := app.readJSON(w, r, &payload)
 	if err != nil {
-		// app.errorLog.Println(err)
-		app.errorJson(w, err)
+		app.errorLog.Println(err)
+		// app.errorJson(w, err)
 		return
 	}
 	amount, err := strconv.Atoi(payload.Amount)
@@ -47,21 +48,28 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 	}
 
 	if okay {
-		err = app.writeJson(w, http.StatusAccepted, pi)
+		// err = app.writeJson(w, http.StatusAccepted, pi)
+		out, err := json.Marshal(pi)
 		if err != nil {
 			app.errorLog.Println(err)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 	} else {
 		j := jsonResponse{
 			OK:      false,
 			Message: msg,
 			Content: "",
 		}
-		err = app.writeJson(w, http.StatusAccepted, j)
+		// err = app.writeJson(w, http.StatusAccepted, j)
+		out, err := json.Marshal(j)
 		if err != nil {
 			app.errorLog.Println(err)
+			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 
 	}
 
