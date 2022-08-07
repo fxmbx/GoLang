@@ -18,16 +18,24 @@ type templateData struct {
 	Warning         string
 	Error           string
 	IsAuthenticated int
-	Api             string
+	API             string
 	CSSVersion      string
 }
 
-var functions = template.FuncMap{}
+var functions = template.FuncMap{
+	"formatCurrency" : formatCurrency,
+}
+
+func formatCurrency(n int) string{
+	f := float32(n/100)
+	return fmt.Sprintf("NGN%.2f",f)
+}
 
 //go:embed templates
 var templateFs embed.FS
 
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
+	td.API = app.Config.api
 	return td
 }
 
