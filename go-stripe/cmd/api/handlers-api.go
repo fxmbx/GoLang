@@ -5,8 +5,8 @@ import (
 	"go-stripe/internal/cards"
 	"net/http"
 	"strconv"
-	"github.com/go-chi/chi/v5"
 
+	"github.com/go-chi/chi/v5"
 )
 
 type jsonResponse struct {
@@ -77,17 +77,17 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 
 }
 
-func (app *application) GetWidgetById(w http.ResponseWriter, r *http.Request){
-	id := chi.URLParam(r,"id")
+func (app *application) GetWidgetById(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	widgetID, _ := strconv.Atoi(id)
 
-	widget, err:= app.DB.GetWidget(widgetID)
-	if err != nil{
+	widget, err := app.DB.GetWidget(widgetID)
+	if err != nil {
 		app.errorLog.Println(err)
-		return 
+		return
 	}
 
-	out, err:= json.Marshal(widget)
+	out, err := json.Marshal(widget)
 	if err != nil {
 		app.errorLog.Println(err)
 		return

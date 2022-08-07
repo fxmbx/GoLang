@@ -45,8 +45,8 @@
         form.classList.add('was-validated')
         hidePayBtn()
 
-        let amountToCharge = String(parseFloat(document.getElementById("amount").value * 100)) 
-        {{/* console.log(amountToCharge) */}}
+        let amountToCharge =document.getElementById("amount").value
+        console.log(amountToCharge)
         const payload ={
             amount: amountToCharge,
             currency: "ngn"
@@ -83,7 +83,8 @@
                             showPayButtons()
                         }else if(result.paymentIntent) {
                             if(result.paymentIntent.status === "succeeded") {
-                                document.getElementById("payment_method").value = result.paymentIntent.payment_method_types[0]
+                                {{/* document.getElementById("payment_method").value = result.paymentIntent.payment_method_types[0] */}}
+                                document.getElementById("payment_method").value = result.paymentIntent.payment_method
                                 document.getElementById("payment_intent").value = result.paymentIntent.id
                                 document.getElementById("payment_amount").value = result.paymentIntent.amount
                                 document.getElementById("payment_currency").value = result.paymentIntent.currency
