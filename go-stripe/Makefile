@@ -26,6 +26,12 @@ build_back:
 	@go build -o dist/gostripe_api ./cmd/api
 	@echo "Back end built!"
 
+## restart stops and starts both front and back
+restart:stop_front stop_back start
+
+
+
+
 ## start: starts front and back end
 start: start_front start_back
 	
@@ -56,3 +62,6 @@ stop_back:
 	@echo "Stopping the back end..."
 	@-pkill -SIGTERM -f "gostripe_api -port=${API_PORT}"
 	@echo "Stopped back end"
+
+
+

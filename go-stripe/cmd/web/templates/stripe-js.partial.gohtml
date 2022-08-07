@@ -9,7 +9,8 @@
 
     {{/* stripe = Stripe("pk_test_51LC4TMKxxGMLmzvfxaOPan6KPQK8HdRlFeX66lzpvYOwcP2gHWPJiJCoF05ybyaehdf472vyNwh0jA4DD0OnKwMt001DmmGgce") */}}
 
-    stripe = Stripe({{.API}}) 
+    {{/* stripe = Stripe({{.API}})  */}}
+    stripe = Stripe({{.StripePublishableKey}}) 
 
     function showPayButtons(){
         payBtn.classList.remove('d-none')
@@ -61,7 +62,7 @@
         }
 
         {{/* fetch("http://localhost:4001/api/payment-intent", options).then(response=>response.text()) */}}
-        fetch("{{index .StringMap "publishable_key"}}", options).then(response=>response.text())
+        fetch("{{.API}}/api/payment-intent", options).then(response=>response.text())
             .then(response => {
                 let data;
                 try{

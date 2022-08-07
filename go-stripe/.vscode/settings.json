@@ -1,5 +1,5 @@
 {
   "go.toolsEnvVars": {
-    "GOROOT": "/usr/local/go/src/cmd/web"
+    "GOROOT": "/usr/local/go"
   }
 }

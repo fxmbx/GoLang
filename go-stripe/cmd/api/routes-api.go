@@ -21,5 +21,6 @@ func (app *application) routes() http.Handler {
 
 	mux.Use(middleware.Heartbeat("/ping"))
 	mux.Post("/api/payment-intent", app.GetPaymentIntent)
+	mux.Get("/api/widget/{id}", app.GetWidgetById)
 	return mux
 }

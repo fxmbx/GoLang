@@ -1,0 +1,7 @@
+development:
+  dialect: mysql
+  database: widget
+  user: funbi
+  password: beedayme
+  host: 127.0.0.1
+  pool: 5

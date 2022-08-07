@@ -20,6 +20,8 @@ type templateData struct {
 	IsAuthenticated int
 	API             string
 	CSSVersion      string
+	StripeSecretKey string
+	StripePublishableKey string
 }
 
 var functions = template.FuncMap{
@@ -36,6 +38,8 @@ var templateFs embed.FS
 
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
 	td.API = app.Config.api
+	td.StripeSecretKey = app.Config.stripe.secret
+	td.StripePublishableKey = app.Config.stripe.key
 	return td
 }
 
