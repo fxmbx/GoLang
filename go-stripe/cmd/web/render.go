@@ -9,28 +9,28 @@ import (
 )
 
 type templateData struct {
-	StringMap       map[string]string
-	IntMap          map[string]int
-	FloatMap        map[string]float32
-	Data            map[string]any
-	CSRFToken       string
-	Flash           string
-	Warning         string
-	Error           string
-	IsAuthenticated int
-	API             string
-	CSSVersion      string
-	StripeSecretKey string
+	StringMap            map[string]string
+	IntMap               map[string]int
+	FloatMap             map[string]float32
+	Data                 map[string]any
+	CSRFToken            string
+	Flash                string
+	Warning              string
+	Error                string
+	IsAuthenticated      int
+	API                  string
+	CSSVersion           string
+	StripeSecretKey      string
 	StripePublishableKey string
 }
 
 var functions = template.FuncMap{
-	"formatCurrency" : formatCurrency,
+	"formatCurrency": formatCurrency,
 }
 
-func formatCurrency(n int) string{
-	f := float32(n/100)
-	return fmt.Sprintf("NGN%.2f",f)
+func formatCurrency(n int) string {
+	f := float32(n) / float32(100)
+	return fmt.Sprintf("NGN%.2f", f)
 }
 
 //go:embed templates

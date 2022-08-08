@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"go-stripe/internal/driver"
@@ -38,17 +39,19 @@ type Config struct {
 }
 
 type application struct {
-	Config        Config
-	infoLog       *log.Logger
-	errorLog      *log.Logger
-	templateCache map[string]*template.Template
-	version       string
-	DB            models.DBModel
-	Session       *scs.SessionManager
+	Config         Config
+	infoLog        *log.Logger
+	errorLog       *log.Logger
+	templateCache  map[string]*template.Template
+	version        string
+	DB             models.DBModel
+	SessionManager *scs.SessionManager
 }
 
 func main() {
 
+	//gob is registring a type for the data passed into the sessionmanager
+	gob.Register(TransactionData{})
 	var cfg Config
 	flag.IntVar(&cfg.port, "port", 4000, "server port to listen")
 	flag.StringVar(&cfg.env, "environment", "development", "Application Environment {development || production}")
@@ -80,16 +83,17 @@ func main() {
 	tc := make(map[string]*template.Template)
 
 	app := &application{
-		Config:        cfg,
-		infoLog:       infoLog,
-		errorLog:      errorLog,
-		templateCache: tc,
-		version:       version,
-		DB:            models.DBModel{DB: conn},
-		Session:       session,
+		Config:         cfg,
+		infoLog:        infoLog,
+		errorLog:       errorLog,
+		templateCache:  tc,
+		version:        version,
+		DB:             models.DBModel{DB: conn},
+		SessionManager: session,
 	}
 
 	err = app.Serve()
+
 	if err != nil {
 		app.errorLog.Panicln(err)
 		// log.Println(err)

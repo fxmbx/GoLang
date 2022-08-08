@@ -71,6 +71,8 @@ type Transaction struct {
 	Currency            string    `json:"currency"`
 	Amount              int       `json:"amount"`
 	TransactionStatusID int       `json:"transaction_status_id"`
+	PaymentIntent       string    `json:"payment_intent"`
+	PaymentMethod       string    `json:"payment_method"`
 	BankReturnCode      string    `json:"bank_return_code"`
 	LastFour            string    `json:"last_four"`
 	ExpiryMonth         int       `json:"expiry_month"`
@@ -138,9 +140,9 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 
 	stmt := `
 		insert into transactions 
-			(amount, currency, last_four,bank_return_code,
+			(amount, currency, last_four,bank_return_code, expiry_month, expiry_year, payment_intent, payment_method,
 			transaction_status_id,created_at, updated_at) 
-		values (?, ?, ?, ?, ?, ?, ?)
+		values (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
 	`
 
 	result, err := m.DB.ExecContext(
@@ -149,6 +151,10 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 		txn.Currency,
 		txn.LastFour,
 		txn.BankReturnCode,
+		txn.ExpiryMonth,
+		txn.ExpiryYear,
+		txn.PaymentIntent,
+		txn.PaymentMethod,
 		txn.TransactionStatusID, time.Now(), time.Now())
 	if err != nil {
 		return 0, err
@@ -170,14 +176,41 @@ func (m *DBModel) InsertOrder(ord Order) (int, error) {
 	stmt := `
 		insert into orders 
 			(widget_id, transaction_id, status_id,quantity,
-				amount,created_at, updated_at) 
-		values (?, ?, ?, ?, ?, ?, ?)
+				amount, customer_id, created_at, updated_at) 
+		values (?, ?, ?, ?, ?, ?, ? ,?)
 	`
 
 	result, err := m.DB.ExecContext(
 		ctx, stmt,
 		ord.WidgetID, ord.TransactionID, ord.StatusID,
-		ord.Quantity, ord.Amount, time.Now(), time.Now())
+		ord.Quantity, ord.Amount, ord.CustomerId, time.Now(), time.Now())
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(id), nil
+
+}
+
+//Inserts a new customer and returns newly inserted customer id or possibly an error
+func (m *DBModel) InsertCustomer(cust Customer) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		insert into customers  
+			(first_name, last_name, email,created_at, updated_at) 
+		values (?, ?, ?, ?, ?)
+	`
+
+	result, err := m.DB.ExecContext(
+		ctx, stmt,
+		cust.FirstName, cust.LastName, cust.Email,
+		time.Now(), time.Now())
 	if err != nil {
 		return 0, err
 	}
