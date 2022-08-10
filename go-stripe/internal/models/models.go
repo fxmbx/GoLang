@@ -32,21 +32,24 @@ type Widget struct {
 	InventoryLevel int       `json:"inventory_level"`
 	Price          int       `json:"price"`
 	Image          string    `json:"image"`
+	IsRecurring    bool      `json:"is_recurring"`
+	PlanID         string    `json:"plan_id"`
 	CreatedAt      time.Time `json:"-"`
 	UpdatedAt      time.Time `json:"-"`
 }
 
 // order is the type for all orders
 type Order struct {
-	ID            int       `json:"id"`
-	WidgetID      int       `json:"widget_id"`
-	TransactionID int       `json:"transaction_id"`
-	CustomerId    int       `json:"customer_id"`
-	StatusID      int       `json:"status_id"`
-	Quantity      int       `json:"quantity"`
-	Amount        int       `json:"amount"`
-	CreatedAt     time.Time `json:"-"`
-	UpdatedAt     time.Time `json:"-"`
+	ID            int `json:"id"`
+	WidgetID      int `json:"widget_id"`
+	TransactionID int `json:"transaction_id"`
+	CustomerId    int `json:"customer_id"`
+	StatusID      int `json:"status_id"`
+	Quantity      int `json:"quantity"`
+	Amount        int `json:"amount"`
+
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }
 
 //status is the type for all order statuses
@@ -112,7 +115,7 @@ func (m *DBModel) GetWidget(id int) (Widget, error) {
 
 	row := m.DB.QueryRowContext(ctx, `
 		select
-			id, name, description, inventory_level, price, coalesce(image, ''), 
+			id, name, description, inventory_level, price, coalesce(image, ''), is_recurring, plan_id,
 			created_at, updated_at 
 		from 
 			widgets
@@ -124,6 +127,8 @@ func (m *DBModel) GetWidget(id int) (Widget, error) {
 		&widget.InventoryLevel,
 		&widget.Price,
 		&widget.Image,
+		&widget.IsRecurring,
+		&widget.PlanID,
 		&widget.CreatedAt,
 		&widget.UpdatedAt,
 	)

@@ -253,6 +253,7 @@ func (app *application) VirtualTerminalReceipt(w http.ResponseWriter, r *http.Re
 	}
 }
 
+//Gets info for the widget customer wants to pay for and renders the gohtml page
 func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	widgetID, _ := strconv.Atoi(id)
@@ -264,7 +265,24 @@ func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
 
 	data := make(map[string]any)
 	data["widget"] = widget
-	if err := app.renderTemplate(w, r, "buy-once", &templateData{Data: data}, "stripe-js"); err != nil {
+	if err := app.renderTemplate(w, r, "buy-once", &templateData{Data: data}); err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+}
+
+//gets informations about the bronze subscription plan and renders the gohtml page
+func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
+	widget, err := app.DB.GetWidget(2)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	data := make(map[string]any)
+	data["widget"] = widget
+	// intMap := make(map[string]string)
+	// intMap["plan_id"] = widget.PlanID
+	if err := app.renderTemplate(w, r, "bronze-plan", &templateData{Data: data}, "stripe-js"); err != nil {
 		app.errorLog.Println(err)
 		return
 	}
@@ -295,7 +313,6 @@ func (app *application) SaveTransaction(txn models.Transaction) (int, error) {
 		return 0, err
 	}
 	return id, nil
-
 }
 
 //Saves order and returns the orde Id

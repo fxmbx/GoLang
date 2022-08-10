@@ -26,11 +26,11 @@ func (app *application) routes() http.Handler {
 	mux.Post("/virtual-terminal-payment-succeeded", app.VirtualTerminalPaymentSuccedded)
 	mux.Get("/virtual-terminal-receipt", app.VirtualTerminalReceipt)
 
+	mux.Get("/widget/{id}", app.ChargeOnce)
 	mux.Post("/payment-succeeded", app.paymentSucceeded)
 	mux.Get("/receipt", app.Receipt)
 
-	mux.Get("/widget/{id}", app.ChargeOnce)
-
+	mux.Get("/plans/bronze", app.BronzePlan)
 	fileServer := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 	return mux

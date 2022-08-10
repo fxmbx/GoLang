@@ -30,7 +30,7 @@ type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
 	version  string
-	DB 		 models.DBModel
+	DB       models.DBModel
 }
 
 func main() {
@@ -43,8 +43,8 @@ func main() {
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog := log.New(os.Stdout, "API-INFO👹\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "API-ERROR👹\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	conn, err := driver.OpenDb(cfg.db.dsn)
 	if err != nil {
@@ -59,7 +59,7 @@ func main() {
 		infoLog:  infoLog,
 		errorLog: errorLog,
 		version:  version,
-		DB: 	  models.DBModel{DB:conn},
+		DB:       models.DBModel{DB: conn},
 	}
 
 	err = app.Serve()
