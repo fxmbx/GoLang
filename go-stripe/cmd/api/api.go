@@ -43,7 +43,7 @@ func main() {
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
 
-	infoLog := log.New(os.Stdout, "API-INFO👹\t", log.Ldate|log.Ltime)
+	infoLog := log.New(os.Stdout, "API-INFO ☃️ \t", log.Ldate|log.Ltime|log.Lshortfile)
 	errorLog := log.New(os.Stdout, "API-ERROR👹\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	conn, err := driver.OpenDb(cfg.db.dsn)

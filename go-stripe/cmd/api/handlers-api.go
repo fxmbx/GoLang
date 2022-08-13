@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"go-stripe/internal/cards"
+	"go-stripe/internal/models"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/stripe/stripe-go/v72"
 )
 
 type jsonResponse struct {
@@ -20,9 +23,15 @@ type stripePayload struct {
 	Currency      string `json:"currency"`
 	Amount        string `json:"amount"`
 	PaymentMethod string `json:"payment_method"`
-	Emain         string `json:"email"`
+	Email         string `json:"email"`
 	LastFour      string `json:"last_four"`
 	Plan          string `json:"plan"`
+	CardBrand     string `json:"card_brand"`
+	ExpiryYear    int    `json:"expiry_year"`
+	ExpiryMonth   int    `json:"expiry_month"`
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
+	ProductID     string `json:"product_id"`
 }
 
 func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request) {
@@ -108,14 +117,86 @@ func (app *application) CreateCustomerAndSubscribeToPlane(w http.ResponseWriter,
 		return
 	}
 
-	app.infoLog.Println(data.Emain, data.LastFour, data.Emain)
+	app.infoLog.Println(data.Email, data.LastFour, data.Email, data.PaymentMethod)
+	card := cards.Card{
+		Secret:   app.Config.stripe.secret,
+		Key:      app.Config.stripe.key,
+		Currency: data.Currency,
+	}
 
 	okay := true
-	msg := ""
+	var subscription *stripe.Subscription
+	txnMsg := "Transaction Successful"
+
+	stripeCustomer, msg, err := card.CreateCustomer(data.FirstName, data.LastName, data.PaymentMethod, data.Email)
+	if err != nil {
+		app.errorLog.Println(err)
+		okay = false
+		txnMsg = msg
+	}
+
+	if okay {
+		subscription, err = card.SubscribeToPlan(stripeCustomer, data.Plan, data.Email, data.LastFour, "")
+		if err != nil {
+			app.errorLog.Println(err)
+			okay = false
+			msg = "Error subscribing customer"
+		}
+		app.infoLog.Println("sub id is: ", subscription.ID)
+	}
+
+	if okay {
+		product_Id, err := strconv.Atoi(data.ProductID)
+		if err != nil {
+			app.errorLog.Println("could not convert id to int : \n", err)
+			return
+		}
+
+		customer_id, err := app.SaveCustomer(data.FirstName, data.LastName, data.Email)
+		if err != nil {
+			app.errorLog.Println("could not save customer : \n", err)
+			return
+		}
+
+		//creat new transaction
+		amount, _ := strconv.Atoi(data.Amount)
+
+		txn := models.Transaction{
+			Amount:              amount,
+			ExpiryMonth:         data.ExpiryMonth,
+			ExpiryYear:          data.ExpiryYear,
+			Currency:            "ngn",
+			LastFour:            data.LastFour,
+			PaymentMethod:       data.PaymentMethod,
+			TransactionStatusID: 2,
+		}
+		txnID, err := app.SaveTransaction(txn)
+		if err != nil {
+			app.errorLog.Println("could not save customer : \n", err)
+			return
+		}
+
+		//create an order
+		order := models.Order{
+			WidgetID:      product_Id,
+			TransactionID: txnID,
+			CustomerId:    customer_id,
+			Amount:        amount,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+			Quantity:      1,
+			StatusID:      1,
+		}
+		_, err = app.SaveOrder(order)
+		if err != nil {
+			app.errorLog.Println("could not save customer : \n", err)
+			return
+		}
+	}
 
 	response := jsonResponse{
 		OK:      okay,
-		Message: msg,
+		Message: txnMsg,
 	}
 
 	out, err := json.Marshal(response)
@@ -127,5 +208,41 @@ func (app *application) CreateCustomerAndSubscribeToPlane(w http.ResponseWriter,
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
+
+}
+
+//Saves customer and returns Id
+func (app *application) SaveCustomer(firstname, lastname, email string) (int, error) {
+	customer := models.Customer{
+		FirstName: firstname,
+		LastName:  lastname,
+		Email:     email,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	id, err := app.DB.InsertCustomer(customer)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+
+}
+
+func (app *application) SaveTransaction(txn models.Transaction) (int, error) {
+
+	id, err := app.DB.InsertTransaction(txn)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+
+}
+
+func (app *application) SaveOrder(order models.Order) (int, error) {
+	id, err := app.DB.InsertOrder(order)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 
 }

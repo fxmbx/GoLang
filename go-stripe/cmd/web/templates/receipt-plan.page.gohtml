@@ -1,0 +1,28 @@
+{{template "base" . }}
+
+{{define "titile" }}
+    Payment Succedded
+{{end}}
+
+{{define "content"}}
+    <h2 class="mt-5">Payment Succeeded</h2>
+    <hr>
+   
+    <p>Payment Amount:<span id ="amount"> </span></p>
+    <p>Customer Name : <span id="first_name"></span> <span id ="last_name"></span> </p>
+    <p>Last Four: <span id ="last4"> </span> </p>
+{{end}} 
+
+{{define "js"}}
+<script>
+if (sessionStorage.first_name){
+    document.getElementById("fist_name").value =  sessionStorage.first_name
+    document.getElementById("last_name").value =  sessionStorage.last_name
+    document.getElementById("last4").value =  sessionStorage.last_four
+    document.getElementById("amount").value =  sessionStorage.amount
+
+    sessionStorage.clear()
+}
+
+</script>
+{{end}}

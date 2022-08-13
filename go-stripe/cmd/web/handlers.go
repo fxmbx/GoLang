@@ -265,7 +265,7 @@ func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
 
 	data := make(map[string]any)
 	data["widget"] = widget
-	if err := app.renderTemplate(w, r, "buy-once", &templateData{Data: data}); err != nil {
+	if err := app.renderTemplate(w, r, "buy-once", &templateData{Data: data}, "stripe-js"); err != nil {
 		app.errorLog.Println(err)
 		return
 	}
@@ -283,6 +283,13 @@ func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
 	// intMap := make(map[string]string)
 	// intMap["plan_id"] = widget.PlanID
 	if err := app.renderTemplate(w, r, "bronze-plan", &templateData{Data: data}, "stripe-js"); err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+}
+func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request) {
+
+	if err := app.renderTemplate(w, r, "receipt-plan", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 		return
 	}
