@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io"
+	"fmt"
 	"log"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // type jsonResponse struct {
@@ -16,18 +18,11 @@ import (
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	maxBytes := 1048576 //1mb
-
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
-
-	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(data)
+	err := json.NewDecoder(r.Body).Decode(data)
 	if err != nil {
-		return app.errorJson(w, err)
-	}
-
-	err = dec.Decode(&struct{}{})
-	if err != io.EOF {
-		return app.errorJson(w, errors.New("body must have only a single JSON value"))
+		app.errorJson(w, errors.New("body must have only a single JSON value"))
+		return err
 	}
 	return nil
 }
@@ -62,10 +57,41 @@ func (app *application) errorJson(w http.ResponseWriter, err error, status ...in
 
 	var payload jsonResponse
 	payload.OK = false
-	payload.Content = err.Error()
-	payload.Message = "Error payload 😞 "
+	payload.Message = err.Error()
+	payload.Content = "Error payload 😞 "
 	log.Printf("\n\nError payload 😞 %v\n\n", payload)
 	app.errorLog.Println(payload)
 
 	return app.writeJson(w, statusCode, payload)
+}
+
+func (app *application) invalidCredentials(w http.ResponseWriter, msg string) error {
+	var payload jsonResponse
+	payload.OK = false
+	payload.Message = "Invalid credentials"
+	payload.Content = fmt.Sprintf("invalid Credentials paylaod %v😞", msg)
+
+	if err := app.writeJson(w, http.StatusUnauthorized, payload); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *application) passwordMatched(password, hashPassword string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password))
+	log.Println(err.Error())
+	if err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
+		}
+	}
+	return true, nil
+	// app.errorLog.Println()
+}
+
+func (app *application) generateToken() {
+
 }

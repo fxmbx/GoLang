@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"go-stripe/internal/cards"
 	"go-stripe/internal/models"
 	"net/http"
@@ -13,10 +14,11 @@ import (
 )
 
 type jsonResponse struct {
-	OK      bool   `json:"ok"`
-	Message string `json:"message,omitempty"`
-	Content string `json:"content,omitempty"`
-	ID      int    `json:"id,omitempty"`
+	OK      bool          `json:"ok"`
+	Message string        `json:"message,omitempty"`
+	Content string        `json:"content,omitempty"`
+	ID      int           `json:"id,omitempty"`
+	Token   *models.Token `json:"authentication_token,omitempty"`
 }
 
 type stripePayload struct {
@@ -32,6 +34,11 @@ type stripePayload struct {
 	FirstName     string `json:"first_name"`
 	LastName      string `json:"last_name"`
 	ProductID     string `json:"product_id"`
+}
+
+type Authenticate struct {
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password"`
 }
 
 func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +218,57 @@ func (app *application) CreateCustomerAndSubscribeToPlane(w http.ResponseWriter,
 
 }
 
-//Saves customer and returns Id
+func (app *application) Authenticate(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (app *application) CreateAUthToken(w http.ResponseWriter, r *http.Request) {
+	var userInput struct {
+		Email    string `json:"email"`
+		Password string `json:"passowrd"`
+	}
+	if err := app.readJSON(w, r, &userInput); err != nil {
+		app.errorJson(w, err)
+		return
+	}
+	app.infoLog.Println("Email from user input is ", userInput.Email)
+	user, err := app.DB.GetUserByEmail(userInput.Email)
+	if err != nil {
+		app.invalidCredentials(w, "eml")
+		// app.errorJson(w, err)
+		return
+	}
+	validPassword, err := app.passwordMatched(userInput.Password, user.Password)
+	if err != nil {
+		app.invalidCredentials(w, "psd")
+		return
+		// app.errorLog.Println(err)
+	}
+	if !validPassword {
+		app.invalidCredentials(w, "psd")
+		return
+		// app.errorLog.Println(err)
+	}
+	token, err := models.GenerateToken(user.ID, 24*time.Hour, models.ScopeAuthentication)
+	if err != nil {
+		app.errorJson(w, err)
+	}
+	if err := app.DB.InsertToken(token, user); err != nil {
+		app.errorJson(w, err)
+		return
+	}
+
+	var payload jsonResponse
+	payload.OK = true
+	payload.Message = "Success"
+	payload.Content = fmt.Sprintf("token for %s generated successfully", userInput.Email)
+	payload.Token = token
+
+	app.writeJson(w, http.StatusAccepted, payload)
+
+}
+
+//Saves customer and returns
 func (app *application) SaveCustomer(firstname, lastname, email string) (int, error) {
 	customer := models.Customer{
 		FirstName: firstname,
